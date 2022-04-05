@@ -1,0 +1,19 @@
+.added {
+    color: green;
+    border: 2px solid green;
+    border-radius: 5px;
+    background-color: lightgrey;
+    font-size: 20px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.error {
+    color: red;
+    border: 2px solid red;
+    border-radius: 5px;
+    background-color: lightgrey;
+    font-size: 20px;
+    padding: 10px;
+    margin-bottom: 10px;
+}

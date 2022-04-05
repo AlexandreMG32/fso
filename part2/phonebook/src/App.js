@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Person from "./components/Person";
+import Info from "./components/Info";
 import contactService from "./services/contacts";
 
 const App = () => {
@@ -9,6 +10,8 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filterWord, setFilterWord] = useState("");
+  const [infoMessage, setInfoMessage] = useState(null);
+  const [infoType, setInfoType] = useState(null);
 
   useEffect(() => {
     contactService
@@ -53,18 +56,35 @@ const App = () => {
     const newPerson = { name: newName, number: newNumber };
     contactService.create(newPerson).then((contactCreated) => {
       setPersons(persons.concat(contactCreated));
+      setInfoMessage(`Contact ${newName} was added to the list`);
+      setInfoType("added");
       setNewName("");
       setNewNumber("");
+
+      setTimeout(() => {
+        setInfoMessage(null);
+        setInfoType(null);
+      }, 3000);
     });
   };
 
   const deleteContact = (contact) => {
     if (window.confirm(`Delete ${contact.name} ?`)) {
-      contactService.remove(contact).then(() => {
-        setPersons(persons.filter((person) => person.id !== contact.id));
-      });
+      contactService
+        .remove(contact)
+        .then(() => {
+          setPersons(persons.filter((person) => person.id !== contact.id));
+        })
+        .catch((err) => {
+          setInfoMessage(`Contact ${newName} is already deleted from the list`);
+          setInfoType("error");
+
+          setTimeout(() => {
+            setInfoMessage(null);
+            setInfoType(null);
+          }, 3000);
+        });
     }
-    return;
   };
 
   const filterShown = (event) => {
@@ -74,6 +94,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Info message={infoMessage} type={infoType} />
       <Filter filter={filterWord} changeFilter={filterShown} />
       <h2>Add a new</h2>
       <PersonForm

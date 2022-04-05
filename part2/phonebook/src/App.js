@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
-import Persons from "./components/Persons";
-import axios from "axios";
+import Person from "./components/Person";
+import contactService from "./services/contacts";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
@@ -11,9 +11,9 @@ const App = () => {
   const [filterWord, setFilterWord] = useState("");
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3001/persons")
-      .then((response) => setPersons(response.data));
+    contactService
+      .getAll()
+      .then((initialContacts) => setPersons(initialContacts));
   }, []);
 
   const contactsToShow = persons.filter((contact) =>
@@ -30,15 +30,41 @@ const App = () => {
 
   const saveContact = (event) => {
     event.preventDefault();
-    const containsName = persons.map((p) => p.name).includes(newName);
-    if (containsName) {
-      alert(`${newName} is already in the list`);
-      return;
+    const contact = persons.filter(
+      (p) => p.name.toLowerCase() === newName.toLowerCase()
+    )[0];
+    if (contact) {
+      console.log(contact);
+      if (window.confirm(`Update ${newName} ?`)) {
+        contactService
+          .update(contact.id, { ...contact, number: newNumber })
+          .then((updatedContact) => {
+            setPersons(
+              persons.map((person) =>
+                person.id === updatedContact.id ? updatedContact : person
+              )
+            );
+          });
+        return;
+      } else {
+        return;
+      }
     }
     const newPerson = { name: newName, number: newNumber };
-    setPersons(persons.concat(newPerson));
-    setNewName("");
-    setNewNumber("");
+    contactService.create(newPerson).then((contactCreated) => {
+      setPersons(persons.concat(contactCreated));
+      setNewName("");
+      setNewNumber("");
+    });
+  };
+
+  const deleteContact = (contact) => {
+    if (window.confirm(`Delete ${contact.name} ?`)) {
+      contactService.remove(contact).then(() => {
+        setPersons(persons.filter((person) => person.id !== contact.id));
+      });
+    }
+    return;
   };
 
   const filterShown = (event) => {
@@ -58,7 +84,13 @@ const App = () => {
         saveContact={saveContact}
       />
       <h2>Numbers</h2>
-      <Persons persons={contactsToShow} />
+      {contactsToShow.map((person) => (
+        <Person
+          key={person.id}
+          person={person}
+          deletePerson={() => deleteContact(person)}
+        />
+      ))}
     </div>
   );
 };

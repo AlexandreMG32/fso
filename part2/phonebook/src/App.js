@@ -47,6 +47,15 @@ const App = () => {
                 person.id === updatedContact.id ? updatedContact : person
               )
             );
+          })
+          .catch((error) => {
+            setInfoMessage(error.response.data.error);
+            setInfoType("error");
+
+            setTimeout(() => {
+              setInfoMessage(null);
+              setInfoType(null);
+            }, 3000);
           });
         return;
       } else {
@@ -54,18 +63,29 @@ const App = () => {
       }
     }
     const newPerson = { name: newName, number: newNumber };
-    contactService.create(newPerson).then((contactCreated) => {
-      setPersons(persons.concat(contactCreated));
-      setInfoMessage(`Contact ${newName} was added to the list`);
-      setInfoType("added");
-      setNewName("");
-      setNewNumber("");
+    contactService
+      .create(newPerson)
+      .then((contactCreated) => {
+        setPersons(persons.concat(contactCreated));
+        setInfoMessage(`Contact ${newName} was added to the list`);
+        setInfoType("added");
+        setNewName("");
+        setNewNumber("");
 
-      setTimeout(() => {
-        setInfoMessage(null);
-        setInfoType(null);
-      }, 3000);
-    });
+        setTimeout(() => {
+          setInfoMessage(null);
+          setInfoType(null);
+        }, 3000);
+      })
+      .catch((error) => {
+        setInfoMessage(error.response.data.error);
+        setInfoType("error");
+
+        setTimeout(() => {
+          setInfoMessage(null);
+          setInfoType(null);
+        }, 3000);
+      });
   };
 
   const deleteContact = (contact) => {

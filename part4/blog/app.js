@@ -8,7 +8,11 @@ const mongoose = require("mongoose");
 const blogsRouter = require("./controllers/blogs");
 const middleware = require("./utils/middleware");
 
-const mongoUrl = MONGODB_URI;
+const mongoUrl =
+  process.env.NODE_ENV === "test"
+    ? process.env.TEST_MONGODB_URI
+    : process.env.MONGODB_URI;
+
 mongoose.connect(mongoUrl);
 
 app.use(cors());

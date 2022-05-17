@@ -1,22 +1,39 @@
 require("express-async-errors");
 const blogsRouter = require("express").Router();
-const { response } = require("../app");
 const Blog = require("../models/blog");
+const middleware = require("../utils/middleware");
 
 blogsRouter.get("/", async (req, res) => {
-  const blogs = await Blog.find({});
+  const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 });
   res.json(blogs);
 });
 
-blogsRouter.post("/", async (req, res, next) => {
+blogsRouter.post("/", middleware.userExtractor, async (req, res, next) => {
   const blog = new Blog(req.body);
 
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ error: "token missing or invalid" });
+  }
+  blog.user = user._id;
+  user.blogs = user.blogs.concat(blog);
+  await user.save();
   const result = await blog.save();
   res.status(201).json(result);
 });
 
-blogsRouter.delete("/:id", async (req, res, next) => {
+blogsRouter.delete("/:id", middleware.userExtractor, async (req, res, next) => {
   const id = req.params.id;
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ error: "token missing or invalid" });
+  }
+  const blog = await Blog.findById(id);
+  if (blog.user.toString() !== user.id.toString()) {
+    return res
+      .status(401)
+      .json({ error: "You dont have permission to delete this blog" });
+  }
 
   await Blog.findByIdAndRemove(id);
   res.status(204).end();

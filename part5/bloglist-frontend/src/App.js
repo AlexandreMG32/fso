@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Blog from "./components/Blog";
 import Info from "./components/Info";
+import BlogForm from "./components/BlogForm";
+import Togglable from "./components/Togglable";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
 
@@ -11,9 +13,6 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [notification, setNotification] = useState(null);
   const [notificationType, setNotificationType] = useState(null);
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
-  const [url, setUrl] = useState("");
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
@@ -27,6 +26,8 @@ const App = () => {
       blogService.setToken(user.token);
     }
   }, []);
+
+  const blogFormRef = useRef();
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -60,29 +61,61 @@ const App = () => {
     dismissNotifications();
   };
 
-  const addBlog = async (event) => {
-    event.preventDefault();
-
+  const addBlog = async (blog) => {
     try {
-      const blog = {
-        title,
-        author,
-        url,
-      };
       await blogService.addBlog(blog);
       setBlogs(blogs.concat(blog));
-      setTitle("");
-      setAuthor("");
-      setUrl("");
+      blogFormRef.current.toggleVisibility();
       setNotification(`${blog.title} added`);
       setNotificationType("success");
       dismissNotifications();
+      return true;
     } catch (exception) {
       setNotification(exception.response.data.error);
       setNotificationType("error");
       dismissNotifications();
+      return false;
     }
-    console.log("new blog added");
+  };
+
+  const likeBlog = async (blog) => {
+    try {
+      const blogEditted = {
+        user: blog.user.id,
+        likes: blog.likes + 1,
+        author: blog.author,
+        title: blog.title,
+        url: blog.url,
+      };
+      await blogService.likeBlog(blogEditted, blog.id);
+      setBlogs(
+        blogs.map((blog) =>
+          blog.id === blogEditted.id
+            ? blog
+            : { ...blog, likes: blogEditted.likes }
+        )
+      );
+    } catch (e) {
+      setNotification("Something went wrong");
+      setNotificationType("error");
+      dismissNotifications();
+    }
+  };
+
+  const deleteBlog = async (blogToDelete) => {
+    try {
+      if (window.confirm(`Delete ${blogToDelete.title} ?`)) {
+        await blogService.deleteBlog(blogToDelete.id);
+        setBlogs(blogs.filter((blog) => blog.id !== blogToDelete.id));
+        setNotification(`${blogToDelete.title} eliminado`);
+        setNotificationType("success");
+        dismissNotifications();
+      }
+    } catch (err) {
+      setNotification("Something went wrong");
+      setNotificationType("error");
+      dismissNotifications();
+    }
   };
 
   const dismissNotifications = () => {
@@ -131,40 +164,23 @@ const App = () => {
         <button onClick={logout}>logout</button>
       </div>
       <br />
-      <form onSubmit={addBlog}>
-        <div>
-          Title
-          <input
-            type="text"
-            name="title"
-            value={title}
-            onChange={({ target }) => setTitle(target.value)}
-          />
-        </div>
-        <div>
-          Author
-          <input
-            type="text"
-            name="author"
-            value={author}
-            onChange={({ target }) => setAuthor(target.value)}
-          />
-        </div>
-        <div>
-          Url
-          <input
-            type="text"
-            name="url"
-            value={url}
-            onChange={({ target }) => setUrl(target.value)}
-          />
-        </div>
-        <button type="submit">Create</button>
-      </form>
+      <Togglable buttonLabel="new Blog" ref={blogFormRef}>
+        <BlogForm addBlog={addBlog} />
+      </Togglable>
       <br />
-      {blogs.map((blog) => (
-        <Blog key={blog.id} blog={blog} />
-      ))}
+      {blogs
+        .sort((a, b) => {
+          return b.likes - a.likes;
+        })
+        .map((blog) => (
+          <Blog
+            key={blog.id}
+            blog={blog}
+            like={() => likeBlog(blog)}
+            deleteBlog={() => deleteBlog(blog)}
+            user={user}
+          />
+        ))}
     </div>
   );
 };

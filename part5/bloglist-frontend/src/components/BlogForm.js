@@ -1,6 +1,5 @@
 import React from "react";
 import { useState } from "react";
-import PropTypes from "prop-types";
 
 const BlogForm = ({ addBlog }) => {
   const [title, setTitle] = useState("");
@@ -32,6 +31,7 @@ const BlogForm = ({ addBlog }) => {
             name="title"
             value={title}
             onChange={({ target }) => setTitle(target.value)}
+            placeholder="Title"
           />
         </div>
         <div>
@@ -41,6 +41,7 @@ const BlogForm = ({ addBlog }) => {
             name="author"
             value={author}
             onChange={({ target }) => setAuthor(target.value)}
+            placeholder="Author"
           />
         </div>
         <div>
@@ -50,21 +51,13 @@ const BlogForm = ({ addBlog }) => {
             name="url"
             value={url}
             onChange={({ target }) => setUrl(target.value)}
+            placeholder="Url"
           />
         </div>
         <button type="submit">Create</button>
       </form>
     </div>
   );
-};
-
-BlogForm.propTypes = {
-  setTitle: PropTypes.func.isRequired,
-  setAuthor: PropTypes.func.isRequired,
-  setUrl: PropTypes.func.isRequired,
-  title: PropTypes.string.isRequired,
-  author: PropTypes.string.isRequired,
-  url: PropTypes.string.isRequired,
 };
 
 export default BlogForm;

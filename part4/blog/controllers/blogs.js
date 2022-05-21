@@ -15,11 +15,11 @@ blogsRouter.post("/", middleware.userExtractor, async (req, res, next) => {
   if (!user) {
     return res.status(401).json({ error: "token missing or invalid" });
   }
-  blog.user = user._id;
+  blog.user = user;
   user.blogs = user.blogs.concat(blog);
   await user.save();
   const result = await blog.save();
-  res.status(201).json(result);
+  return res.status(201).json(result);
 });
 
 blogsRouter.delete("/:id", middleware.userExtractor, async (req, res, next) => {

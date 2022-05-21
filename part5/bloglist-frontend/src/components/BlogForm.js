@@ -8,13 +8,8 @@ const BlogForm = ({ addBlog }) => {
 
   const createBlog = async (event) => {
     event.preventDefault();
-    if (
-      await addBlog({
-        title,
-        author,
-        url,
-      })
-    ) {
+    const result = await addBlog({ title, author, url });
+    if (result) {
       setTitle("");
       setAuthor("");
       setUrl("");
@@ -22,7 +17,7 @@ const BlogForm = ({ addBlog }) => {
   };
 
   return (
-    <div>
+    <div id="blog-form">
       <form onSubmit={createBlog}>
         <div>
           Title
@@ -54,7 +49,9 @@ const BlogForm = ({ addBlog }) => {
             placeholder="Url"
           />
         </div>
-        <button type="submit">Create</button>
+        <button id="submit-form" type="submit">
+          Create
+        </button>
       </form>
     </div>
   );

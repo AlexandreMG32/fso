@@ -46,7 +46,6 @@ const App = () => {
       setNotificationType("success");
       dismissNotifications();
     } catch (exception) {
-      console.log(exception);
       setNotification(exception.response.data.error);
       setNotificationType("error");
       dismissNotifications();
@@ -63,18 +62,16 @@ const App = () => {
 
   const addBlog = async (blog) => {
     try {
-      await blogService.addBlog(blog);
-      setBlogs(blogs.concat(blog));
-      blogFormRef.current.toggleVisibility();
+      const blogAdded = await blogService.addBlog(blog);
+      setBlogs(blogs.concat(blogAdded));
       setNotification(`${blog.title} added`);
       setNotificationType("success");
+      blogFormRef.current.toggleVisibility();
       dismissNotifications();
-      return true;
     } catch (exception) {
       setNotification(exception.response.data.error);
       setNotificationType("error");
       dismissNotifications();
-      return false;
     }
   };
 
@@ -134,6 +131,7 @@ const App = () => {
           <div>
             Username
             <input
+              id="username"
               type="text"
               value={username}
               name="Username"
@@ -143,13 +141,16 @@ const App = () => {
           <div>
             Password
             <input
+              id="password"
               type="password"
               name="Password"
               value={password}
               onChange={({ target }) => setPassword(target.value)}
             />
           </div>
-          <button type="submit">login</button>
+          <button id="login-button" type="submit">
+            login
+          </button>
         </form>
       </div>
     );
